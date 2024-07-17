@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Reload Tabs</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        width: 200px;
+        padding: 10px;
+      }
+      label {
+        display: block;
+        margin-bottom: 10px;
+      }
+      button {
+        display: block;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h3>Reload Tabs</h3>
+    <p>Current Tab Hostname: <span id="currentHostname"></span></p>
+    <label>
+      <input type="checkbox" id="loginReload" checked />
+      Reload on login
+    </label>
+    <label>
+      <input type="checkbox" id="logoutReload" checked />
+      Reload on logout
+    </label>
+    <label>
+      <input type="checkbox" id="useHostname" checked />
+      Use current tab hostname
+    </label>
+    <button id="reloadTabs">Reload Tabs</button>
+    <script src="popup.js"></script>
+  </body>
+</html>
