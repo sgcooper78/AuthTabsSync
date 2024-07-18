@@ -18,8 +18,6 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
-let reloadedTabs = {};
-
 chrome.webNavigation.onBeforeNavigate.addListener((details) => {
   const loginKeywords = ['signin', 'login'];
   const logoutKeywords = ['signout', 'logout'];
@@ -27,25 +25,34 @@ chrome.webNavigation.onBeforeNavigate.addListener((details) => {
   chrome.tabs.get(details.tabId, (tab) => {
     if (tab && tab.url) {
       const oldUrl = new URL(tab.url);
-      const oldPathname = oldUrl.pathname.toLowerCase();
+      const newUrl = new URL(details.url);
+      const oldFullUrl = oldUrl.toString().toLowerCase();
+      const newFullUrl = newUrl.toString().toLowerCase();
 
       console.log('Navigation event detected:', tab.url);
-      console.log('Old pathname:', oldPathname);
+      console.log('Old URL:', oldFullUrl);
+      console.log('New URL:', newFullUrl);
 
-      if (loginKeywords.some(keyword => tab.url.toLowerCase().includes(keyword))) {
-        console.log('Login navigation detected:', tab.url);
-        handleNavigationEvent('loginDetected', oldUrl.hostname, details.tabId, tab.url);
-      } else if (logoutKeywords.some(keyword => tab.url.toLowerCase().includes(keyword))) {
-        console.log('Logout navigation detected:', tab.url);
-        handleNavigationEvent('logoutDetected', oldUrl.hostname, details.tabId, tab.url);
+      if (loginKeywords.some(keyword => oldFullUrl.includes(keyword) || newFullUrl.includes(keyword))) {
+        console.log('Login navigation detected:', details.url);
+        handleNavigationEvent('loginDetected', newUrl.hostname, details.tabId);
+      } else if (logoutKeywords.some(keyword => oldFullUrl.includes(keyword) || newFullUrl.includes(keyword))) {
+        console.log('Logout navigation detected:', details.url);
+        handleNavigationEvent('logoutDetected', newUrl.hostname, details.tabId);
       } else {
-        console.log('No matching login/logout pattern found for URL:', tab.url);
+        console.log('No matching login/logout pattern found for URL:', details.url);
       }
     }
   });
 });
 
-function handleNavigationEvent(eventType, hostname, currentTabId, currentUrl) {
+chrome.webNavigation.onCompleted.addListener((details) => {
+  chrome.storage.local.remove(`reloaded_${details.tabId}`, () => {
+    console.log('Cleared reloaded state for tab:', details.tabId);
+  });
+});
+
+function handleNavigationEvent(eventType, hostname, currentTabId) {
   const settingKey = eventType === 'loginDetected' ? 'loginReload' : 'logoutReload';
 
   chrome.storage.sync.get([settingKey], (data) => {
@@ -57,22 +64,29 @@ function handleNavigationEvent(eventType, hostname, currentTabId, currentUrl) {
       return;
     }
 
-    function reloadMatchingTabs(hostname) {
+    function reloadMatchingTabs(hostname, initialTabId) {
       console.log('Attempting to match hostname:', hostname);
       chrome.tabs.query({}, (tabs) => {
         tabs.forEach((tab) => {
           const tabHostname = new URL(tab.url).hostname;
           console.log('Checking tab:', tab.id, 'URL:', tab.url, 'Hostname:', tabHostname);
 
-          if (tab.id !== currentTabId && tabHostname.endsWith(hostname) && !reloadedTabs[tab.id]) {
-            console.log('Reloading tab:', tab.id);
-            chrome.tabs.reload(tab.id);
-            reloadedTabs[tab.id] = true;
-            setTimeout(() => {
-              delete reloadedTabs[tab.id];
-            }, 60000); // Clear the reloaded tab ID after 60 seconds to avoid infinite loop
+          if (tab.id !== initialTabId && tabHostname.includes(hostname)) {
+            chrome.storage.local.get([`reloaded_${tab.id}`], (result) => {
+              if (!result[`reloaded_${tab.id}`]) {
+                console.log('Reloading tab:', tab.id);
+                chrome.tabs.reload(tab.id, () => {
+                  // Mark the tab as reloaded to prevent cascading reloads
+                  chrome.storage.local.set({ [`reloaded_${tab.id}`]: true }, () => {
+                    console.log('Marked tab as reloaded:', tab.id);
+                  });
+                });
+              } else {
+                console.log('Tab has already been reloaded, skipping:', tab.id);
+              }
+            });
           } else {
-            console.log('No match for tab or it is the current tab or it was recently reloaded:', tab.id);
+            console.log('No match for tab or it is the initial tab:', tab.id);
           }
         });
       });
@@ -82,11 +96,11 @@ function handleNavigationEvent(eventType, hostname, currentTabId, currentUrl) {
     const delay = 5000; // 5 seconds delay
     setTimeout(() => {
       // Start matching from the most specific part of the hostname and trickle up to the base domain
-      const hostnameParts = hostname.split('.').reverse();
-      for (let i = 1; i <= hostnameParts.length; i++) {
-        const partialHostname = hostnameParts.slice(0, i).reverse().join('.');
+      const hostnameParts = hostname.split('.');
+      for (let i = 0; i < hostnameParts.length - 1; i++) {
+        const partialHostname = hostnameParts.slice(i).join('.');
         console.log(`Checking partial hostname: ${partialHostname}`);
-        reloadMatchingTabs(partialHostname);
+        reloadMatchingTabs(partialHostname, currentTabId);
       }
     }, delay);
   });
