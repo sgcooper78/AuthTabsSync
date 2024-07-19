@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Auth Tabs Sync",
+  "version": "1.0",
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "webNavigation",
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.ts"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.ts"]
+    }
+  ],
+  "action": {
+    "default_popup": "index.html"
+  }
+}

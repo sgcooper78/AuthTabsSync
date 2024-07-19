@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Login Tab Reloader",
+  "name": "Auth Tabs Sync",
   "version": "1.0",
   "permissions": [
     "tabs",
@@ -9,15 +9,15 @@
     "storage"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "assets/background.js"
   },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"]
+      "js": ["assets/content.js"]
     }
   ],
   "action": {
-    "default_popup": "popup.html"
+    "default_popup": "index.html"
   }
 }

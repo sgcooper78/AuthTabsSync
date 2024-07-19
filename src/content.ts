@@ -1,3 +1,4 @@
+// src/content.ts
 console.log('Content script loaded');
 
 // You can add any additional functionality you need here, if required
