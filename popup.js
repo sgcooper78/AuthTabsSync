@@ -1,55 +1,91 @@
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('chrome object:', chrome); // Check if chrome object is available
-    const reloadButton = document.getElementById('reloadTabs');
-    const useHostnameCheckbox = document.getElementById('useHostname');
-    const loginReloadCheckbox = document.getElementById('loginReload');
-    const logoutReloadCheckbox = document.getElementById('logoutReload');
-    const currentHostnameSpan = document.getElementById('currentHostname');
-  
-    // Load current settings
-    chrome.storage.sync.get(['useHostname', 'loginReload', 'logoutReload'], (data) => {
-      useHostnameCheckbox.checked = data.useHostname !== undefined ? data.useHostname : true;
-      loginReloadCheckbox.checked = data.loginReload !== undefined ? data.loginReload : true;
-      logoutReloadCheckbox.checked = data.logoutReload !== undefined ? data.logoutReload : true;
-      // Debugging storage values
-      console.log('Loaded settings:', data);
-    });
-  
-    // Save settings when checkboxes are changed
-    useHostnameCheckbox.addEventListener('change', () => {
-      chrome.storage.sync.set({ useHostname: useHostnameCheckbox.checked }, () => {
-        console.log('useHostname set to:', useHostnameCheckbox.checked);
-      });
-    });
-    loginReloadCheckbox.addEventListener('change', () => {
-      chrome.storage.sync.set({ loginReload: loginReloadCheckbox.checked }, () => {
-        console.log('loginReload set to:', loginReloadCheckbox.checked);
-      });
-    });
-    logoutReloadCheckbox.addEventListener('change', () => {
-      chrome.storage.sync.set({ logoutReload: logoutReloadCheckbox.checked }, () => {
-        console.log('logoutReload set to:', logoutReloadCheckbox.checked);
-      });
-    });
-  
-    // Display the current tab hostname
+  const loginActionRadios = document.getElementsByName('loginAction');
+  const logoutActionRadios = document.getElementsByName('logoutAction');
+  const reloadDelaySlider = document.getElementById('reloadDelay');
+  const sliderValueSpan = document.getElementById('sliderValue');
+  const currentHostnameSpan = document.getElementById('currentHostname');
+  const reloadHostnameTabsButton = document.getElementById('reloadHostnameTabs');
+  const closeHostnameTabsButton = document.getElementById('closeHostnameTabs');
+  let currentHostname = '';
+  let currentTabId = null;
+
+  if (!loginActionRadios || !logoutActionRadios || !reloadDelaySlider || !sliderValueSpan || !currentHostnameSpan || !reloadHostnameTabsButton || !closeHostnameTabsButton) {
+    console.error('Some elements are missing in the DOM.');
+    return;
+  }
+
+  console.log('All elements are present.');
+
+  // Load current settings
+  chrome.storage.sync.get(['loginAction', 'logoutAction', 'reloadDelay'], (data) => {
+    if (data.loginAction) {
+      const loginActionElement = document.getElementById(`login${capitalizeFirstLetter(data.loginAction)}`);
+      if (loginActionElement) loginActionElement.checked = true;
+    }
+    if (data.logoutAction) {
+      const logoutActionElement = document.getElementById(`logout${capitalizeFirstLetter(data.logoutAction)}`);
+      if (logoutActionElement) logoutActionElement.checked = true;
+    }
+
+    if (data.reloadDelay !== undefined) {
+      reloadDelaySlider.value = data.reloadDelay;
+      sliderValueSpan.textContent = `${data.reloadDelay}s`;
+    }
+
+    // Display the current tab hostname and ID
     chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
       const currentTab = tabs[0];
-      const hostname = new URL(currentTab.url).hostname;
-      currentHostnameSpan.textContent = hostname;
-    });
-  
-    // Reload tabs button click handler
-    reloadButton.addEventListener('click', function() {
-      const useHostname = useHostnameCheckbox.checked;
-      chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-        const currentTab = tabs[0];
-        const message = {
-          type: 'reloadTabs',
-          useHostname: useHostname,
-          hostname: new URL(currentTab.url).hostname
-        };
-        chrome.runtime.sendMessage(message);
-      });
+      if (currentTab && currentTab.url) {
+        currentHostname = new URL(currentTab.url).hostname;
+        currentTabId = currentTab.id;
+        currentHostnameSpan.textContent = currentHostname;
+        reloadHostnameTabsButton.textContent = `Reload all other tabs from ${currentHostname}`;
+        closeHostnameTabsButton.textContent = `Close all other tabs from ${currentHostname}`;
+      }
     });
   });
+
+  // Save settings when radio buttons are changed
+  loginActionRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      const loginAction = getCheckedValue(loginActionRadios);
+      chrome.storage.sync.set({ loginAction: loginAction });
+    });
+  });
+
+  logoutActionRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      const logoutAction = getCheckedValue(logoutActionRadios);
+      chrome.storage.sync.set({ logoutAction: logoutAction });
+    });
+  });
+
+  // Save slider value and update display
+  reloadDelaySlider.addEventListener('input', () => {
+    const delay = reloadDelaySlider.value;
+    sliderValueSpan.textContent = `${delay}s`;
+    chrome.storage.sync.set({ reloadDelay: delay });
+  });
+
+  // Reload tabs with the current hostname
+  reloadHostnameTabsButton.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ action: 'reloadTabsWithHostname', hostname: currentHostname, currentTabId: currentTabId });
+  });
+
+  // Close tabs with the current hostname
+  closeHostnameTabsButton.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ action: 'closeTabsWithHostname', hostname: currentHostname, currentTabId: currentTabId });
+  });
+
+  function getCheckedValue(radioNodeList) {
+    for (let i = 0; i < radioNodeList.length; i++) {
+      if (radioNodeList[i].checked) {
+        return radioNodeList[i].value;
+      }
+    }
+  }
+
+  function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  }
+});

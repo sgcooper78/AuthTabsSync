@@ -1,22 +1,41 @@
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.sync.get(['useHostname', 'loginReload', 'logoutReload'], (data) => {
-    if (data.useHostname === undefined) {
-      chrome.storage.sync.set({ useHostname: true }, () => {
-        console.log('Default useHostname set to true on install');
-      });
+  chrome.storage.sync.get(['loginAction', 'logoutAction', 'reloadDelay'], (data) => {
+    if (data.loginAction === undefined) {
+      chrome.storage.sync.set({ loginAction: 'reload' });
     }
-    if (data.loginReload === undefined) {
-      chrome.storage.sync.set({ loginReload: true }, () => {
-        console.log('Default loginReload set to true on install');
-      });
+    if (data.logoutAction === undefined) {
+      chrome.storage.sync.set({ logoutAction: 'reload' });
     }
-    if (data.logoutReload === undefined) {
-      chrome.storage.sync.set({ logoutReload: true }, () => {
-        console.log('Default logoutReload set to true on install');
-      });
+    if (data.reloadDelay === undefined) {
+      chrome.storage.sync.set({ reloadDelay: 5 });
     }
   });
 });
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.currentTabId) {
+    if (message.action === 'reloadTabsWithHostname') {
+      handleHostnameTabs(message.hostname, 'reload', message.currentTabId);
+    } else if (message.action === 'closeTabsWithHostname') {
+      handleHostnameTabs(message.hostname, 'close', message.currentTabId);
+    }
+  }
+});
+
+function handleHostnameTabs(hostname, action, currentTabId) {
+  chrome.tabs.query({}, (tabs) => {
+    tabs.forEach((tab) => {
+      const tabHostname = new URL(tab.url).hostname;
+      if (tab.id !== currentTabId && tabHostname.includes(hostname)) {
+        if (action === 'reload') {
+          chrome.tabs.reload(tab.id);
+        } else if (action === 'close') {
+          chrome.tabs.remove(tab.id);
+        }
+      }
+    });
+  });
+}
 
 chrome.webNavigation.onBeforeNavigate.addListener((details) => {
   const loginKeywords = ['signin', 'login'];
@@ -29,24 +48,18 @@ chrome.webNavigation.onBeforeNavigate.addListener((details) => {
       const oldFullUrl = oldUrl.toString().toLowerCase();
       const newFullUrl = newUrl.toString().toLowerCase();
 
-      console.log('Navigation event detected:', tab.url);
-      console.log('Old URL:', oldFullUrl);
-      console.log('New URL:', newFullUrl);
-
       chrome.storage.local.get([`reloaded_${details.tabId}`], (result) => {
         if (result[`reloaded_${details.tabId}`]) {
-          console.log('Tab has been reloaded recently, skipping processing:', details.tabId);
+          console.log(`Tab ${details.tabId} has been reloaded recently, skipping processing.`);
           return;
         }
 
         if (loginKeywords.some(keyword => oldFullUrl.includes(keyword) || newFullUrl.includes(keyword))) {
-          console.log('Login navigation detected:', details.url);
+          console.log('Login navigation detected:', newUrl.hostname);
           handleNavigationEvent('loginDetected', newUrl.hostname, details.tabId);
         } else if (logoutKeywords.some(keyword => oldFullUrl.includes(keyword) || newFullUrl.includes(keyword))) {
-          console.log('Logout navigation detected:', details.url);
+          console.log('Logout navigation detected:', newUrl.hostname);
           handleNavigationEvent('logoutDetected', newUrl.hostname, details.tabId);
-        } else {
-          console.log('No matching login/logout pattern found for URL:', details.url);
         }
       });
     }
@@ -54,75 +67,65 @@ chrome.webNavigation.onBeforeNavigate.addListener((details) => {
 });
 
 chrome.webNavigation.onCompleted.addListener((details) => {
-  chrome.storage.local.remove(`reloaded_${details.tabId}`, () => {
-    console.log('Cleared reloaded state for tab:', details.tabId);
-  });
-  chrome.storage.local.remove(`initiator_${details.tabId}`, () => {
-    console.log('Cleared initiator state for tab:', details.tabId);
-  });
+  chrome.storage.local.remove(`reloaded_${details.tabId}`);
+  chrome.storage.local.remove(`initiator_${details.tabId}`);
 });
 
 function handleNavigationEvent(eventType, hostname, currentTabId) {
-  const settingKey = eventType === 'loginDetected' ? 'loginReload' : 'logoutReload';
+  const settingKey = eventType === 'loginDetected' ? 'loginAction' : 'logoutAction';
 
-  chrome.storage.sync.get([settingKey], (data) => {
-    const reloadSetting = data[settingKey];
-    console.log(`Retrieved setting for ${eventType}:`, reloadSetting);
+  chrome.storage.sync.get([settingKey, 'reloadDelay'], (data) => {
+    const action = data[settingKey];
+    const delay = action === 'close' ? 0 : (data.reloadDelay || 5) * 1000; // Default delay to 5 seconds
+    console.log(`Action for ${eventType}:`, action);
+    console.log(`Delay for ${eventType}:`, delay);
 
-    if (!reloadSetting) {
-      console.log(`Reload setting is disabled for ${eventType}`);
+    if (!action || action === 'disabled') {
+      console.log(`Action for ${eventType} is disabled.`);
       return;
     }
 
     chrome.storage.local.get([`initiator_${currentTabId}`], (result) => {
-      if (result[`initiator_${currentTabId}`]) {
-        console.log('Initiator tab is already set, skipping reload.');
+      if (result[`initiator_${currentTabId}`] && action !== 'close') {
+        console.log(`Initiator tab ${currentTabId} is already set, skipping reload.`);
         return;
       }
 
       chrome.storage.local.set({ [`initiator_${currentTabId}`]: true }, () => {
-        function reloadMatchingTabs(hostname, initialTabId) {
-          console.log('Attempting to match hostname:', hostname);
+        function handleMatchingTabs(hostname, initialTabId) {
           chrome.tabs.query({}, (tabs) => {
             tabs.forEach((tab) => {
               const tabHostname = new URL(tab.url).hostname;
-              console.log('Checking tab:', tab.id, 'URL:', tab.url, 'Hostname:', tabHostname);
 
               if (tab.id !== initialTabId && tabHostname.includes(hostname)) {
                 chrome.storage.local.get([`reloaded_${tab.id}`], (result) => {
-                  if (!result[`reloaded_${tab.id}`]) {
-                    console.log('Reloading tab:', tab.id);
-                    chrome.tabs.reload(tab.id, () => {
-                      // Mark the tab as reloaded and set a timeout to clear this flag after a short delay
-                      chrome.storage.local.set({ [`reloaded_${tab.id}`]: true }, () => {
-                        console.log('Marked tab as reloaded:', tab.id);
+                  if (action === 'reload' && !result[`reloaded_${tab.id}`]) {
+                    console.log(`Reloading tab ${tab.id} after ${delay / 1000} seconds`);
+                    setTimeout(() => {
+                      chrome.tabs.reload(tab.id, () => {
+                        chrome.storage.local.set({ [`reloaded_${tab.id}`]: true });
                         setTimeout(() => {
-                          chrome.storage.local.remove(`reloaded_${tab.id}`, () => {
-                            console.log('Cleared reloaded state for tab after delay:', tab.id);
-                          });
-                        }, 10000); // 10 seconds delay to prevent immediate re-processing
+                          chrome.storage.local.remove(`reloaded_${tab.id}`);
+                        }, 10000);
                       });
-                    });
+                    }, delay);
+                  } else if (action === 'close') {
+                    console.log(`Closing tab ${tab.id}`);
+                    chrome.tabs.remove(tab.id);
                   } else {
-                    console.log('Tab has already been reloaded, skipping:', tab.id);
+                    console.log(`Tab ${tab.id} has already been reloaded, skipping.`);
                   }
                 });
-              } else {
-                console.log('No match for tab or it is the initial tab:', tab.id);
               }
             });
           });
         }
 
-        // Delay before starting the reload process
-        const delay = 5000; // 5 seconds delay
         setTimeout(() => {
-          // Start matching from the most specific part of the hostname and trickle up to the base domain
           const hostnameParts = hostname.split('.');
           for (let i = 0; i < hostnameParts.length - 1; i++) {
             const partialHostname = hostnameParts.slice(i).join('.');
-            console.log(`Checking partial hostname: ${partialHostname}`);
-            reloadMatchingTabs(partialHostname, currentTabId);
+            handleMatchingTabs(partialHostname, currentTabId);
           }
         }, delay);
       });
@@ -130,11 +133,8 @@ function handleNavigationEvent(eventType, hostname, currentTabId) {
   });
 }
 
-// Clear the initiator state when the tab is reloaded to allow future reloads
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete') {
-    chrome.storage.local.remove(`initiator_${tabId}`, () => {
-      console.log('Cleared initiator state for tab:', tabId);
-    });
+    chrome.storage.local.remove(`initiator_${tabId}`);
   }
 });
