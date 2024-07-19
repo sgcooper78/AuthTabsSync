@@ -1,39 +1,80 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Reload Tabs</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        width: 200px;
-        padding: 10px;
-      }
-      label {
-        display: block;
-        margin-bottom: 10px;
-      }
-      button {
-        display: block;
-        margin-top: 10px;
-      }
-    </style>
-  </head>
-  <body>
-    <h3>Reload Tabs</h3>
-    <p>Current Tab Hostname: <span id="currentHostname"></span></p>
-    <label>
-      <input type="checkbox" id="loginReload" checked />
-      Reload on login
-    </label>
-    <label>
-      <input type="checkbox" id="logoutReload" checked />
-      Reload on logout
-    </label>
-    <label>
-      <input type="checkbox" id="useHostname" checked />
-      Use current tab hostname
-    </label>
-    <button id="reloadTabs">Reload Tabs</button>
-    <script src="popup.js"></script>
-  </body>
+<head>
+  <title>Login Tab Reloader</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      width: 300px;
+      padding: 10px;
+    }
+    .action-group {
+      margin-bottom: 15px;
+    }
+    .action-group strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+    .radio-group {
+      display: flex;
+      align-items: center;
+    }
+    .radio-group label {
+      margin-left: 5px;
+      margin-right: 15px;
+    }
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+    }
+    button {
+      display: block;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h3>Login/Logout Tab Actions</h3>
+  <p>Current Tab Hostname: <span id="currentHostname"></span></p>
+  
+  <div class="action-group">
+    <strong>Action upon sign in for all other tabs:</strong>
+    <div class="radio-group">
+      <input type="radio" id="loginReload" name="loginAction" value="reload" checked />
+      <label for="loginReload">Reload</label>
+      <input type="radio" id="loginClose" name="loginAction" value="close" />
+      <label for="loginClose">Close</label>
+      <input type="radio" id="loginDisabled" name="loginAction" value="disabled" />
+      <label for="loginDisabled">Disabled</label>
+    </div>
+  </div>
+  
+  <div class="action-group">
+    <strong>Action upon sign out for all other tabs:</strong>
+    <div class="radio-group">
+      <input type="radio" id="logoutReload" name="logoutAction" value="reload" checked />
+      <label for="logoutReload">Reload</label>
+      <input type="radio" id="logoutClose" name="logoutAction" value="close" />
+      <label for="logoutClose">Close</label>
+      <input type="radio" id="logoutDisabled" name="logoutAction" value="disabled" />
+      <label for="logoutDisabled">Disabled</label>
+    </div>
+  </div>
+  
+  <label>
+    <div class="slider-label">
+      <span>Time to wait before performing action on all other tabs:</span>
+      <span id="sliderValue">5s</span>
+    </div>
+    <input type="range" id="reloadDelay" min="0" max="30" value="5" step="1" />
+  </label>
+  
+  <div>
+    <p>Actions to do to all other tabs:</p>
+    <button id="reloadHostnameTabs">Reload all other tabs from this hostname</button>
+    <button id="closeHostnameTabs">Close all other tabs from this hostname</button>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
 </html>
