@@ -9,8 +9,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         popup: resolve(__dirname, 'index.html'), // Moved to root
-        background: resolve(__dirname, 'src/background.ts'),
-        content: resolve(__dirname, 'src/content.ts')
+        background: resolve(__dirname, 'src/scripts/background.ts'),
+        content: resolve(__dirname, 'src/scripts/content.ts')
       },
       output: {
         entryFileNames: 'assets/[name].js',
