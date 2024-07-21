@@ -1,5 +1,4 @@
 # AuthTabsSync
-![AuthTabsSync Logo](./images/logo.png)
 
 AuthTabsSync is a Chrome extension designed to enhance your browsing experience by synchronizing actions across all tabs with the same hostname. Built with TypeScript and React, and utilizing the Mantine component library, AuthTabsSync automatically reloads or closes all other tabs with the same hostname whenever you log into a website, ensuring that your session is consistently updated across multiple tabs.
 
