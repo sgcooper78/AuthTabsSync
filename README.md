@@ -9,12 +9,6 @@ AuthTabsSync is a Chrome extension designed to enhance your browsing experience 
 - **Customizable Actions:** Choose to either reload or close tabs with the same hostname upon login detection.
 - **Seamless Integration:** Works in the background without disrupting your browsing experience.
 
-## Technologies Used
-
-- **TypeScript:** Ensures robust and maintainable code.
-- **React:** Provides a reactive and component-based architecture.
-- **Mantine Component Library:** Delivers a set of accessible and customizable React components.
-
 ## Installation
 
 1. Download the AuthTabsSync extension from the Chrome Web Store.
