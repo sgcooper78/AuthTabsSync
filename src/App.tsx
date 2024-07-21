@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import '@mantine/core/styles.css';
+import { Button, Title, Text, Group, Slider, Space } from '@mantine/core';
+
 
 const App = () => {
   const [loginAction, setLoginAction] = useState('reload');
@@ -14,7 +17,7 @@ const App = () => {
       if (data.reloadDelay !== undefined) setReloadDelay(data.reloadDelay);
     });
 
-    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       const currentTab = tabs[0];
       if (currentTab && currentTab.url) {
         const hostname = new URL(currentTab.url).hostname;
@@ -36,8 +39,7 @@ const App = () => {
     chrome.storage.sync.set({ logoutAction: value });
   };
 
-  const handleReloadDelayChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Number(event.target.value);
+  const handleReloadDelayChange = (value: number) => {
     setReloadDelay(value);
     chrome.storage.sync.set({ reloadDelay: value });
   };
@@ -52,9 +54,11 @@ const App = () => {
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', width: '300px', padding: '10px' }}>
-      <h2>Auth Tabs Sync</h2>
-      <h3>Login/Logout Tab Actions</h3>
-      <p>Current Tab Hostname: <span>{currentHostname}</span></p>
+      <Title order={2}>Auth Tabs Sync</Title>
+      <Title order={3}>Login/Logout Tab Actions</Title>
+      <Text>
+        Current Tab Hostname: <Text span  fw={700}>{currentHostname}</Text>
+      </Text>
 
       <div className="action-group">
         <strong>Action upon sign in for all other tabs:</strong>
@@ -80,20 +84,17 @@ const App = () => {
         </div>
       </div>
 
-      <label>
-        <div className="slider-label">
-          <span>Time to wait before performing action on all other tabs:</span>
-          <span>{reloadDelay}s</span>
-        </div>
-        <input type="range" id="reloadDelay" min="0" max="30" value={reloadDelay} step="1" onChange={handleReloadDelayChange} />
-      </label>
+      <Text size="sm" mt="xl">Time to wait before performing action on all other tabs: <Text span fw={700}>{reloadDelay} Seconds</Text> </Text>
+      <Slider defaultValue={3} value={reloadDelay} label={(reloadDelay) => `${reloadDelay} Seconds`} min={0} max={30} onChange={setReloadDelay} onChangeEnd={handleReloadDelayChange} step={1}/>
 
-      <div>
-        <p>Actions to do to all other tabs:</p>
-        <button onClick={handleReloadTabs}>Reload all other tabs from this hostname</button>
-        <button onClick={handleCloseTabs}>Close all other tabs from this hostname</button>
+      <Space h="md" />
+
+      <Group justify="center">
+        <Text>Actions to do to all other tabs:</Text>
+        <Button onClick={handleReloadTabs} variant="filled" size="compact-xs">Reload all other tabs from this hostname</Button>
+        <Button onClick={handleReloadTabs} variant="filled" size="compact-xs">Close all other tabs from this hostname</Button>
+      </Group>
       </div>
-    </div>
   );
 };
 
