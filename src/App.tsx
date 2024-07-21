@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import '@mantine/core/styles.css';
-import { Button, Title, Text, Group, Slider, Space } from '@mantine/core';
+import { Button, Title, Text, Group, Slider, Space, Tooltip } from '@mantine/core';
+import ActionGroup from './components/ActionGroup';
 
 
 const App = () => {
@@ -27,14 +28,12 @@ const App = () => {
     });
   }, []);
 
-  const handleLoginActionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
+  const handleLoginActionChange = (value: string) => {
     setLoginAction(value);
     chrome.storage.sync.set({ loginAction: value });
   };
 
-  const handleLogoutActionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
+  const handleLogoutActionChange = (value: string) => {
     setLogoutAction(value);
     chrome.storage.sync.set({ logoutAction: value });
   };
@@ -56,7 +55,7 @@ const App = () => {
     <div style={{ fontFamily: 'Arial, sans-serif', width: '300px', padding: '10px' }}>
       <Group justify="center">
       <Title order={2}>Auth Tabs Sync</Title>
-      <Title order={3}>Login/Logout Tab Actions</Title>
+      {/* <Title order={3}>Login/Logout Tab Actions</Title> */}
       <Text>
         Current Tab Hostname: <Text span  fw={700}>{currentHostname}</Text>
       </Text>
@@ -64,39 +63,73 @@ const App = () => {
 
       <Space h="md" />
 
-      <div className="action-group">
-        <strong>Action upon sign in for all other tabs:</strong>
-        <div className="radio-group">
-          <input type="radio" id="loginReload" name="loginAction" value="reload" checked={loginAction === 'reload'} onChange={handleLoginActionChange} />
-          <label htmlFor="loginReload">Reload</label>
-          <input type="radio" id="loginClose" name="loginAction" value="close" checked={loginAction === 'close'} onChange={handleLoginActionChange} />
-          <label htmlFor="loginClose">Close</label>
-          <input type="radio" id="loginDisabled" name="loginAction" value="disabled" checked={loginAction === 'disabled'} onChange={handleLoginActionChange} />
-          <label htmlFor="loginDisabled">Disabled</label>
-        </div>
-      </div>
+      <ActionGroup
+        name="loginActionGroup"
+        label='Action upon sign in for all other tabs:'
+        description='This will change the setting for what happens on sign in'
+        onChange={handleLoginActionChange}
+        value={loginAction}
+        radios={[
+          {
+            name: 'loginAction',
+            id: 'loginReload',
+            value: 'reload',
+            label: 'Reload',
+          },
+          {
+            name: 'loginAction',
+            id: 'loginClose',
+            value: 'close',
+            label: 'Close',
+          },
+          {
+            name: 'loginAction',
+            id: 'loginDisabled',
+            value: 'disabled',
+            label: 'Disabled',
 
-      <div className="action-group">
-        <strong>Action upon sign out for all other tabs:</strong>
-        <div className="radio-group">
-          <input type="radio" id="logoutReload" name="logoutAction" value="reload" checked={logoutAction === 'reload'} onChange={handleLogoutActionChange} />
-          <label htmlFor="logoutReload">Reload</label>
-          <input type="radio" id="logoutClose" name="logoutAction" value="close" checked={logoutAction === 'close'} onChange={handleLogoutActionChange} />
-          <label htmlFor="logoutClose">Close</label>
-          <input type="radio" id="logoutDisabled" name="logoutAction" value="disabled" checked={logoutAction === 'disabled'} onChange={handleLogoutActionChange} />
-          <label htmlFor="logoutDisabled">Disabled</label>
-        </div>
-      </div>
+          },
+        ]}
+      />
+
+      <ActionGroup
+        name="logoutAction"
+        label='Action upon sign out for all other tabs:'
+        description='This will change the setting for what happens on sign out'
+        onChange={handleLogoutActionChange}
+        value={logoutAction}
+        radios={[
+          {
+            name: 'logoutAction',
+            id: 'logoutReload',
+            value: 'reload',
+            label: 'Reload',
+          },
+          {
+            name: 'logoutAction',
+            id: 'logoutClose',
+            value: 'close',
+            label: 'Close',
+          },
+          {
+            name: 'logoutAction',
+            id: 'logoutDisabled',
+            value: 'disabled',
+            label: 'Disabled',
+
+          },
+        ]}
+      />
 
       <Text size="sm" mt="xl">Time to wait before performing action on all other tabs: <Text span fw={700}>{reloadDelay} Seconds</Text> </Text>
-      <Slider defaultValue={3} value={reloadDelay} label={(reloadDelay) => `${reloadDelay} Seconds`} min={0} max={30} onChange={setReloadDelay} onChangeEnd={handleReloadDelayChange} step={1}/>
+      <Slider defaultValue={3} value={reloadDelay} label={(reloadDelay) => `${reloadDelay} Seconds`} min={0} max={60} onChange={setReloadDelay} onChangeEnd={handleReloadDelayChange} step={1}/>
 
       <Space h="md" />
 
       <Group justify="center">
         <Text>Actions to do to all other tabs:</Text>
         <Button onClick={handleReloadTabs} variant="filled" size="compact-xs">Reload all other tabs from this hostname</Button>
-        <Button onClick={handleReloadTabs} variant="filled" size="compact-xs">Close all other tabs from this hostname</Button>
+        <Button onClick={handleCloseTabs} variant="filled" size="compact-xs">Close all other tabs from this hostname</Button>
       </Group>
       </div>
   );
