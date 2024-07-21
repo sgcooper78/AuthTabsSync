@@ -27,6 +27,14 @@ AuthTabsSync is a Chrome extension designed to enhance your browsing experience 
 1. Click on the AuthTabsSync icon in your Chrome toolbar.
 2. Choose your preferred action (reload or close tabs) for synchronization.
 
+## Support
+
+If you find AuthTabsSync useful and would like to support its development, consider making a donation:
+
+- **Buy Me a Coffee:** Support on [Buy Me a Coffee](https://buymeacoffee.com/scottgcooper)
+
+Your contributions help ensure continued development and improvements to the extension.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
