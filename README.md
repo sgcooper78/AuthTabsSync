@@ -1,30 +1,48 @@
-# React + TypeScript + Vite
+# AuthTabsSync
+![AuthTabsSync Logo](./images/logo.png)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+AuthTabsSync is a Chrome extension designed to enhance your browsing experience by synchronizing actions across all tabs with the same hostname. Built with TypeScript and React, and utilizing the Mantine component library, AuthTabsSync automatically reloads or closes all other tabs with the same hostname whenever you log into a website, ensuring that your session is consistently updated across multiple tabs.
 
-Currently, two official plugins are available:
+![AuthTabsSync Screenshot](./images/screenshot.png)
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Automatic Tab Synchronization:** Detects login pages and synchronizes actions across all tabs with the same hostname.
+- **Customizable Actions:** Choose to either reload or close tabs with the same hostname upon login detection.
+- **Seamless Integration:** Works in the background without disrupting your browsing experience.
 
-## Expanding the ESLint configuration
+## Technologies Used
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- **TypeScript:** Ensures robust and maintainable code.
+- **React:** Provides a reactive and component-based architecture.
+- **Mantine Component Library:** Delivers a set of accessible and customizable React components.
 
-- Configure the top-level `parserOptions` property like this:
+## Installation
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json', './tsconfig.app.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
-```
+1. Download the AuthTabsSync extension from the Chrome Web Store.
+2. Click "Add to Chrome" to install the extension.
+3. Once installed, the AuthTabsSync icon will appear in your Chrome toolbar.
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+## Building
+
+1. Clone the repo
+2. Run npm install
+3. Run npm build
+4. Load dist directory into chrome extension
+
+## Usage
+
+1. **Login Detection:** AuthTabsSync automatically detects when you log into a website by looking for specific keywords like "Username," "Password," "Email," or "Account ID" on the page.
+2. **Tab Synchronization:** When a login is detected, AuthTabsSync will either reload or close all other tabs with the same hostname based on your chosen settings.
+
+## Settings
+
+1. Click on the AuthTabsSync icon in your Chrome toolbar.
+2. Choose your preferred action (reload or close tabs) for synchronization.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Contact
+
+For questions or feedback, please reach out to us at [sgcooper78@gmail.com](mailto:sgcooper78@gmail.com).

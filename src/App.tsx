@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import '@mantine/core/styles.css';
-import { Button, Title, Text, Group, Slider, Space, Tooltip } from '@mantine/core';
+import { Button, Title, Text, Group, Slider, Space, Avatar } from '@mantine/core';
 import ActionGroup from './components/ActionGroup';
+
+import logo from './assets/icon.png'
 
 
 const App = () => {
@@ -53,12 +55,18 @@ const App = () => {
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', width: '300px', padding: '10px' }}>
+
       <Group justify="center">
-      <Title order={2}>Auth Tabs Sync</Title>
-      {/* <Title order={3}>Login/Logout Tab Actions</Title> */}
-      <Text>
-        Current Tab Hostname: <Text span  fw={700}>{currentHostname}</Text>
-      </Text>
+        <Title order={2}>Auth Tabs Sync</Title>
+        <Avatar src={logo} alt="logo" size='sm' />
+      </Group>
+
+      <Space h="md" />
+
+      <Group justify="center">
+        <Text>
+          Current Tab Hostname: <Text span fw={700}>{currentHostname}</Text>
+        </Text>
       </Group>
 
       <Space h="md" />
@@ -122,7 +130,7 @@ const App = () => {
       />
 
       <Text size="sm" mt="xl">Time to wait before performing action on all other tabs: <Text span fw={700}>{reloadDelay} Seconds</Text> </Text>
-      <Slider defaultValue={3} value={reloadDelay} label={(reloadDelay) => `${reloadDelay} Seconds`} min={0} max={60} onChange={setReloadDelay} onChangeEnd={handleReloadDelayChange} step={1}/>
+      <Slider defaultValue={3} value={reloadDelay} label={(reloadDelay) => `${reloadDelay} Seconds`} min={0} max={60} onChange={setReloadDelay} onChangeEnd={handleReloadDelayChange} step={1} />
 
       <Space h="md" />
 
@@ -131,7 +139,7 @@ const App = () => {
         <Button onClick={handleReloadTabs} variant="filled" size="compact-xs">Reload all other tabs from this hostname</Button>
         <Button onClick={handleCloseTabs} variant="filled" size="compact-xs">Close all other tabs from this hostname</Button>
       </Group>
-      </div>
+    </div>
   );
 };
 
