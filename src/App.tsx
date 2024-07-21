@@ -54,11 +54,15 @@ const App = () => {
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', width: '300px', padding: '10px' }}>
+      <Group justify="center">
       <Title order={2}>Auth Tabs Sync</Title>
       <Title order={3}>Login/Logout Tab Actions</Title>
       <Text>
         Current Tab Hostname: <Text span  fw={700}>{currentHostname}</Text>
       </Text>
+      </Group>
+
+      <Space h="md" />
 
       <div className="action-group">
         <strong>Action upon sign in for all other tabs:</strong>
