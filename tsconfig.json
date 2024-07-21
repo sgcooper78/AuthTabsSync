@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "lib": ["DOM", "ES6"],
+    "jsx": "react",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "types": ["chrome"],
+    "noEmit": true, // Add this line to prevent emitting output files
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}
