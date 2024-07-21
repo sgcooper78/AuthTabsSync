@@ -28,11 +28,6 @@ AuthTabsSync is a Chrome extension designed to enhance your browsing experience 
 3. Run npm build
 4. Load dist directory into chrome extension
 
-## Usage
-
-1. **Login Detection:** AuthTabsSync automatically detects when you log into a website by looking for specific keywords like "Username," "Password," "Email," or "Account ID" on the page.
-2. **Tab Synchronization:** When a login is detected, AuthTabsSync will either reload or close all other tabs with the same hostname based on your chosen settings.
-
 ## Settings
 
 1. Click on the AuthTabsSync icon in your Chrome toolbar.
