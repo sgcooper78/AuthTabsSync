@@ -51,8 +51,17 @@ git clone https://github.com/sgcooper78/AuthTabsSync.git
 ## Building
 
 1. Clone the repo
+```bash
+git clone https://github.com/sgcooper78/AuthTabsSync.git
+```
 2. Run npm install
+```bash
+npm install
+```
 3. Run npm build
+```bash
+npm run build
+```
 4. Load dist directory into chrome extension
 
 ## Settings
